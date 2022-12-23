@@ -1,0 +1,123 @@
+<script>
+  function createDiv() {
+    // creating a div to inject into the first child of the main element.
+    var element = document.createElement("div");
+    element.innerHTML =
+      "<div id='div-gpt-ad-1661869355581-0' class='advertisement' style='min-width: 320px; min-height: 50px;'>";
+    var main = document.querySelector("main");
+    main.firstChild.nextSibling.prepend(element);
+  }
+
+  /**
+   * loading Ads to the div for home page or article page
+   * */
+  function loadAds(slot, elementContainer, breakPoints, environment) {
+    injectScript("https://securepubads.g.doubleclick.net/tag/js/gpt.js")
+      .then(
+        (function () {
+          window.googletag = window.googletag || { cmd: [] };
+          googletag.cmd.push(function () {
+            var target = googletag
+              .defineSlot(slot, breakPoints, elementContainer)
+              .setTargeting("environment", [environment]);
+            target.addService(googletag.pubads());
+            googletag.pubads().enableSingleRequest();
+            googletag.pubads().collapseEmptyDivs();
+
+            if (slot.includes("Articles")) {
+              //loading Ads for the Articles.
+              try {
+                var sportName = window.location.pathname.split("/")[3];
+                target.setTargeting("DAZNNews_Sport", [sportName]);
+              } catch (error) {
+                console.log(error);
+              }
+            }
+            try {
+              if (personalizedAdsAllowed())
+                googletag
+                  .pubads()
+                  .setPrivacySettings({ nonPersonalizedAds: true });
+            } catch (error) {
+              console.log(error);
+            }
+            googletag.enableServices();
+          });
+          googletag.cmd.push(function () {
+            googletag.display(elementContainer);
+          });
+        })()
+      )
+      .catch(function (error) {
+        console.error(error);
+      });
+  }
+  /* * Appending script to the body element.  * */
+  function injectScript(src) {
+    return new Promise(function (resolve, reject) {
+      var script = document.createElement("script");
+      script.src = src;
+      script.addEventListener("load", resolve);
+      script.addEventListener("error", function (e) {
+        reject(e.error);
+      });
+      document.body.appendChild(script);
+    });
+  }
+  /* * returns Gam slot path based on current window location. * */
+  function getGAMSlotPath() {
+    var pageType = window.location.pathname.endsWith("news")
+      ? "HomePage"
+      : "Articles";
+    return "/67970281/DAZN_News/" + pageType + "/Leaderboard_Top";
+  }
+
+  function getViewPortDimentions() {
+    var screenWidth = window.innerWidth > 0 ? window.innerWidth : screen.width;
+    return screenWidth > 480 ? [[728, 90]] : [[320, 50]];
+  }
+  /* * Personalized Ads are allowed based on the user. * */
+  function personalizedAdsAllowed() {
+    var personalizedAddValue = decodeURIComponent(
+      getCookie("OptanonConsent")
+        .split("&")
+        .find(function (x) {
+          return x.split("=")[0] == "groups";
+        })
+        .split("=")[1]
+    )
+      .split(",")
+      .find(function (x) {
+        return x.split(":")[0] == "C0008";
+      })
+      .split(":")[1];
+    return personalizedAddValue == "1";
+  }
+
+  function getCookie(name) {
+    var value = "; " + document.cookie;
+    var parts = value.split("; " + name + "=");
+    if (parts.length === 2) return parts.pop().split(";").shift();
+  }
+
+  /* * Excecution of the script. * */
+  try {
+    (function mainCall() {
+      createDiv();
+      loadAds(
+        getGAMSlotPath(),
+        "div-gpt-ad-1661869355581-0",
+        getViewPortDimentions(),
+        "staging"
+      );
+    })(); // self excecuting function
+  } catch (error) {
+    console.log(error);
+  }
+</script>
+<style>
+  .advertisement {
+    display: flex;
+    justify-content: center;
+  }
+</style>
